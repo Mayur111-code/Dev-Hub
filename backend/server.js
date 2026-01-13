@@ -10,7 +10,7 @@ connectDB();
 const app = express();
 
 const allowedOrigins = [
-  "http://localhost:5173"
+  "https://dev-hub-rust.vercel.app/"
 ];
 
 app.use(
