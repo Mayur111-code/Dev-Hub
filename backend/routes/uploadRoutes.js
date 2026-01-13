@@ -7,8 +7,7 @@ const router = express.Router();
 
 // Allowed origins
 const allowedOrigins = [
- "https://dev-hub-rust.vercel.app",
-  "http://localhost:5173",
+ "https://infina-hub.vercel.app"
 ];
 
 // CORS Middleware for this router
