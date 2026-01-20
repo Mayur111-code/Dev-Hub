@@ -58,7 +58,7 @@ export default function Register() {
       });
 
       dispatch(setUser({ user: data.user, token: data.token }));
-      toast.success(`Welcome to InfinaHub, ${data.user.name}! 🎉`);
+      toast.success(`Welcome to DevHub, ${data.user.name}! 🎉`);
       navigate("/");
     } catch (err) {
       toast.error(err.response?.data?.message || "Registration failed");
@@ -80,7 +80,7 @@ export default function Register() {
         <div className="text-center mb-6">
           <div className="inline-flex p-1 bg-white/10 rounded-3xl shadow-lg border border-white/10 overflow-hidden mb-4">
             <img 
-              src="/hublogo.jpg" 
+              src="/devlogo.jpg" 
               alt="Logo" 
               className="w-14 h-14 object-contain rounded-2xl"
             />
@@ -132,7 +132,7 @@ export default function Register() {
               <input
                 type="email"
                 className={`w-full pl-11 pr-4 py-3 bg-slate-900/50 border ${errors.email ? 'border-red-500/50' : 'border-white/5'} rounded-2xl text-white outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all text-sm`}
-                placeholder="dev@infina.com"
+                placeholder="dev@devhub.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />

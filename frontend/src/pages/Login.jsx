@@ -27,7 +27,7 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
-      toast.error("Sagali mahiti bhara!");
+      toast.error("Fill in all the information!");
       return;
     }
 
@@ -76,7 +76,7 @@ export default function Login() {
         <div className="text-center mb-6">
           <div className="inline-flex p-1 bg-white/10 rounded-3xl shadow-lg border border-white/10 overflow-hidden mb-4">
             <img 
-              src="/hublogo.jpg" 
+              src="/devlogo.jpg" 
               alt="Logo" 
               className="w-14 h-14 object-contain rounded-2xl transition-transform hover:scale-110 duration-500"
             />
