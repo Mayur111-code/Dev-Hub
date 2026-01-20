@@ -1,10 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../redux/userSlice";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   FiMenu, FiX, FiSearch, FiPlus, FiBell, FiHome,
-  FiCompass, FiLogOut, FiLayers
+  FiCompass, FiLogOut, FiLayers, FiUser
 } from "react-icons/fi";
 import CreateProjectModal from "../modals/CreateProjectModal";
 import API from "../../api/axios";
@@ -20,7 +20,14 @@ export default function Navbar() {
   const [showSearch, setShowSearch] = useState(false);
   const [open, setOpen] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
-  const searchRef = useRef(null);
+  const [scrolled, setScrolled] = useState(false);
+
+  // Scroll effect for navbar transparency
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -53,155 +60,118 @@ export default function Navbar() {
         />
       )}
 
-      <nav className="bg-slate-950/80 backdrop-blur-2xl border-b border-white/5 fixed top-0 left-0 w-full z-[100]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+      <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-300 ${scrolled ? "py-3 px-4" : "py-5 px-0"
+        }`}>
+        <div className={`max-w-7xl mx-auto px-6 h-16 flex items-center justify-between transition-all duration-300 ${scrolled
+            ? "bg-slate-900/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.8)]"
+            : "bg-transparent border-b border-white/5"
+          }`}>
 
-          {/* LOGO SECTION */}
-          <Link to="/" className="flex items-center gap-3 shrink-0 group">
-            <div className="p-1.5 bg-white/5 rounded-xl border border-white/10 group-hover:border-indigo-500/50 transition-all">
+          {/* LEFT: LOGO */}
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
               <img
-                src="/hublogo.jpg"
-                alt="InfinaHub"
-                className="w-8 h-8 object-contain rounded-lg"
+                src="/devlogo.jpg"
+                alt="dev Logo"
+                className="relative w-9 h-9 object-contain rounded-lg border border-white/10"
               />
             </div>
-            
-            <div className="md:hidden relative flex-1 mx-3" ref={searchRef}>
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <span className="hidden sm:block text-xl font-bold tracking-widest uppercase text-slate-950">
+              dev <span className="text-amber-400 border-b-2 border-amber-400/50">Hub</span>
+            </span>
+          </Link>
+
+          {/* CENTER: SEARCH (Floating Style) */}
+          <div className="hidden md:flex flex-1 justify-center max-w-md px-8">
+            <div className="relative w-full group">
+              <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-400 transition-colors" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search protocol..."
-                className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/5 rounded-xl text-white text-xs font-bold outline-none"
+                placeholder="Search resources..."
+                className="w-full pl-11 pr-4 py-2 bg-white/5 border border-white/10 rounded-full focus:ring-1 focus:ring-indigo-500/50 focus:bg-white/10 text-sm transition-all outline-none text-slate-200"
               />
 
               {showSearch && (
-                <div className="absolute top-11 left-0 w-full bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                <div className="absolute top-12 left-0 w-full bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
                   {results.map((u) => (
-                    <Link
-                      key={u._id}
-                      to={`/profile/${u._id}`}
-                      onClick={() => setShowSearch(false)}
-                      className="flex items-center gap-4 px-5 py-3 hover:bg-white/5 transition-colors"
-                    >
-                      <img
-                        src={u.avatar}
-                        className="w-8 h-8 rounded-lg object-cover border border-white/10"
-                        alt=""
-                      />
-                      <span className="text-xs font-black uppercase text-slate-300 tracking-widest">
-                        {u.name}
-                      </span>
+                    <Link key={u._id} to={`/profile/${u._id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-indigo-500/10 transition-colors" onClick={() => setShowSearch(false)}>
+                      <img src={u.avatar} className="w-8 h-8 rounded-full border border-white/10" alt="" />
+                      <span className="text-sm font-medium text-slate-300">{u.name}</span>
                     </Link>
                   ))}
                 </div>
               )}
             </div>
-            
-            <div className="hidden sm:block">
-              <span className="text-lg font-black text-white tracking-tighter uppercase italic">Infina<span className="text-indigo-500">Hub</span></span>
-              <div className="h-[1px] w-full bg-gradient-to-r from-indigo-500 to-transparent"></div>
-            </div>
-          </Link>
-
-          {/* SEARCH BAR */}
-          <div className="hidden md:block relative w-full max-w-xs lg:max-w-sm mx-8" ref={searchRef}>
-            <div className="relative group">
-              <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search protocol..."
-                className="w-full pl-11 pr-4 py-2.5 bg-white/5 border border-white/5 rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:bg-white/10 text-white text-xs font-bold transition-all placeholder:text-slate-600 outline-none"
-              />
-            </div>
-
-            {showSearch && (
-              <div className="absolute top-14 left-0 w-full bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl">
-                {results.map((u) => (
-                  <Link key={u._id} to={`/profile/${u._id}`} className="flex items-center gap-4 px-5 py-3 hover:bg-white/5 transition-colors" onClick={() => setShowSearch(false)}>
-                    <img src={u.avatar} className="w-8 h-8 rounded-lg object-cover border border-white/10" alt="" />
-                    <span className="text-xs font-black uppercase text-slate-300 tracking-widest">{u.name}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
           </div>
 
+          {/* RIGHT: ACTIONS */}
+          <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/5 mr-2">
+              <NavLink icon={<FiHome size={18} />} to="/" title="Home" />
+              <NavLink icon={<FiCompass size={18} />} to="/explore" title="Explore" />
+              <NavLink icon={<FiLayers size={18} />} to="/projects" title="Projects" />
+            </div>
 
-          <div className="hidden md:flex items-center gap-2 lg:gap-4">
-            <Link title="Home" to="/" className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"><FiHome size={20} /></Link>
-            <Link title="Explore" to="/explore" className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"><FiCompass size={20} /></Link>
-
-
-            <Link title="Projects" to="/projects" className="p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all">
-              <FiLayers size={20} />
-            </Link>
-
-
-            <div className="h-8 w-[1px] bg-white/10 mx-2"></div>
-
-            <Link to="/notifications" className="relative p-2.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all">
+            <Link to="/notifications" className="p-2.5 text-slate-400 hover:text-white relative">
               <FiBell size={20} />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-indigo-500 rounded-full border-2 border-slate-950 animate-pulse"></span>
+              <span className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full"></span>
             </Link>
 
-            <Link to={`/profile/${user?._id}`} className="shrink-0 ml-1">
+            <div className="h-6 w-[1px] bg-white/10 mx-2 hidden md:block"></div>
+
+            <Link to={`/profile/${user?._id}`} className="shrink-0 group relative">
               <img
                 src={user?.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-                className="w-9 h-9 rounded-xl object-cover border-2 border-white/5 hover:border-indigo-500 transition-all"
-                alt="Me"
+                className="w-9 h-9 rounded-full object-cover border-2 border-transparent group-hover:border-indigo-500 transition-all shadow-lg"
+                alt="Profile"
               />
             </Link>
 
-            <button onClick={handleLogout} className="p-2.5 text-slate-500 hover:text-red-500 transition-colors">
-              <FiLogOut size={20} />
+            <button onClick={handleLogout} className="hidden md:block p-2.5 text-slate-400 hover:text-red-400 transition-colors">
+              <FiLogOut size={19} />
+            </button>
+
+            {/* Mobile Toggle */}
+            <button className="md:hidden p-2 text-slate-300 hover:bg-white/10 rounded-lg" onClick={() => setOpen(!open)}>
+              {open ? <FiX size={24} /> : <FiMenu size={24} />}
             </button>
           </div>
-
-          {/* MOBILE TOGGLE */}
-          <button className="md:hidden p-2 text-white bg-white/5 rounded-xl border border-white/10" onClick={() => setOpen(!open)}>
-            {open ? <FiX size={24} /> : <FiMenu size={24} />}
-          </button>
         </div>
 
-        {/* MOBILE MENU */}
-
+        {/* MOBILE MENU (Slide Down) */}
         {open && (
-          <div className="md:hidden absolute top-full left-0 w-full bg-slate-900 border-b border-white/10 p-6 flex flex-col gap-3 shadow-2xl backdrop-blur-3xl">
-            <Link to="/" onClick={() => setOpen(false)} className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl font-black text-slate-300 uppercase tracking-widest text-[10px]">
-              <FiHome /> Home
-            </Link>
-            <Link to="/explore" onClick={() => setOpen(false)} className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl font-black text-slate-300 uppercase tracking-widest text-[10px]">
-              <FiCompass /> Explore
-            </Link>
-            <Link to="/projects" onClick={() => setOpen(false)} className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl font-black text-slate-300 uppercase tracking-widest text-[10px]">
-              <FiLayers /> Projects
-            </Link>
-            <Link to="/notifications" onClick={() => setOpen(false)} className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl font-black text-slate-300 uppercase tracking-widest text-[10px]">
-              <FiBell /> Notifications
-            </Link>
-            <Link
-  to={`/profile/${user?._id}`}
-  onClick={() => setOpen(false)}
-  className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl font-black text-slate-300 uppercase tracking-widest text-[10px]"
->
-  <img
-    src={user?.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-    className="w-5 h-5 rounded-full object-cover border border-white/10"
-    alt="Profile"
-  />
-  Profile
-</Link>
-
-            <button onClick={handleLogout} className="flex items-center gap-4 p-4 bg-red-500/10 text-red-500 rounded-2xl font-black uppercase tracking-widest text-[10px] mt-2">
-              <FiLogOut /> Terminate
+          <div className="md:hidden absolute top-20 left-4 right-4 bg-slate-900/95 backdrop-blur-3xl border border-white/10 rounded-3xl p-4 flex flex-col gap-2 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <MobileLink icon={<FiHome />} label="Home" to="/" onClick={() => setOpen(false)} />
+            <MobileLink icon={<FiCompass />} label="Explore" to="/explore" onClick={() => setOpen(false)} />
+            <MobileLink icon={<FiLayers />} label="Projects" to="/projects" onClick={() => setOpen(false)} />
+            <MobileLink icon={<FiUser />} label="Profile" to={`/profile/${user?._id}`} onClick={() => setOpen(false)} />
+            <div className="h-[1px] bg-white/5 my-2"></div>
+            <button onClick={handleLogout} className="flex items-center gap-3 p-4 text-red-400 hover:bg-red-500/10 rounded-2xl w-full transition-all">
+              <FiLogOut /> <span className="font-medium text-sm">Logout</span>
             </button>
           </div>
         )}
       </nav>
     </>
+  );
+}
+
+// Sub-components for cleaner code
+function NavLink({ icon, to, title }) {
+  return (
+    <Link to={to} title={title} className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all">
+      {icon}
+    </Link>
+  );
+}
+
+function MobileLink({ icon, label, to, onClick }) {
+  return (
+    <Link to={to} onClick={onClick} className="flex items-center gap-4 p-4 text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-400 rounded-2xl transition-all font-medium">
+      {icon} {label}
+    </Link>
   );
 }

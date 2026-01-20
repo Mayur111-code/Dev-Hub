@@ -11,6 +11,7 @@ const app = express();
 
 const allowedOrigins = [
   "https://the-dev-hub.vercel.app"
+  //"http://localhost:5173"
 ];
 
 app.use(
