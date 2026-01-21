@@ -3,8 +3,9 @@ import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../redux/userSlice";
 import { useState, useRef, useEffect } from "react";
 import {
-  FiMenu, FiX, FiSearch, FiPlus, FiBell, FiHome,
-  FiCompass, FiLogOut, FiLayers, FiUser
+  FiMenu, FiX, FiSearch,  FiBell, FiHome,
+  FiCompass, FiLogOut, FiLayers, FiUser,
+  FiInfo,
 } from "react-icons/fi";
 import CreateProjectModal from "../modals/CreateProjectModal";
 import API from "../../api/axios";
@@ -113,6 +114,7 @@ export default function Navbar() {
               <NavLink icon={<FiHome size={18} />} to="/" title="Home" />
               <NavLink icon={<FiCompass size={18} />} to="/explore" title="Explore" />
               <NavLink icon={<FiLayers size={18} />} to="/projects" title="Projects" />
+              <NavLink icon={<FiInfo size={18} />} to="/help" title="Help" />
             </div>
 
             <Link to="/notifications" className="p-2.5 text-slate-400 hover:text-white relative">

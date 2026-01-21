@@ -2,9 +2,9 @@ import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Navbar from "./components/layout/Navbar";
-import Footer from "./components/layout/Footer";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Help from "./components/layout/Help";
 
 // Lazy load pages
 const Login = lazy(() => import("./pages/Login"));
@@ -44,7 +44,7 @@ function App() {
             <ProtectedRoute>
               <Navbar />
               <Home />
-              <Footer />
+              
             </ProtectedRoute>
           }
         />
@@ -84,6 +84,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/help" 
+          element={
+            <ProtectedRoute>
+            <Navbar/>
+            <Help/>
+            </ProtectedRoute>
+          }
+          />
 
         {/* PROJECT DETAILS */}
         <Route
