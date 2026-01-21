@@ -149,6 +149,7 @@ export default function Navbar() {
             <MobileLink icon={<FiHome />} label="Home" to="/" onClick={() => setOpen(false)} />
             <MobileLink icon={<FiCompass />} label="Explore" to="/explore" onClick={() => setOpen(false)} />
             <MobileLink icon={<FiLayers />} label="Projects" to="/projects" onClick={() => setOpen(false)} />
+            <MobileLink icon={<FiInfo />} label="Help" to="/help" onClick={() => setOpen(false)} />
             <MobileLink icon={<FiUser />} label="Profile" to={`/profile/${user?._id}`} onClick={() => setOpen(false)} />
             <div className="h-[1px] bg-white/5 my-2"></div>
             <button onClick={handleLogout} className="flex items-center gap-3 p-4 text-red-400 hover:bg-red-500/10 rounded-2xl w-full transition-all">
