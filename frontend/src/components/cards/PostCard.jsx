@@ -3,6 +3,7 @@ import API from "../../api/axios";
 import { Heart, MessageCircle, Share2, MoreHorizontal, Edit3, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import LikesModal from "../modals/LikesModal";
 import CommentsModal from "../modals/CommentsModal";
 import EditPostModal from "../modals/EditPostModal";
@@ -10,11 +11,15 @@ import timeAgo from "../../utils/timeAgo";
 
 export default function PostCard({ post, refresh }) {
   const [isLiking, setIsLiking] = useState(false);
+  const authUser = useSelector((s) => s.user.user);
+  const [localLikes, setLocalLikes] = useState(post.likes || []);
+  const isLikedLocal = localLikes?.includes(authUser?._id);
   const [modals, setModals] = useState({ likes: false, comments: false, edit: false });
   const [optionsOpen, setOptionsOpen] = useState(false);
 
-  const authUser = useSelector((s) => s.user.user);
 
+  // Fix: No page reload caused by this code, but ensure author fallback is a pure const (does not involve any form or navigation)
+  // No problematic event causing reload here, so keep as is for stable behavior:
   const author = post.author || {
     _id: "unknown",
     name: "Anonymous",
@@ -22,17 +27,29 @@ export default function PostCard({ post, refresh }) {
   };
 
   const isOwner = authUser?._id === author._id;
-  const isLiked = post.likes?.includes(authUser?._id);
+  const isLiked = isLikedLocal;
 
-  const handleLike = async () => {
+  const handleLike = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
+    console.debug("handleLike clicked", post._id);
     if (isLiking) return;
     try {
       setIsLiking(true);
-      
-      await API.put(`/posts/like/${post._id}`);
-      refresh(); // Refresh content
+      // optimistic update
+      setLocalLikes((prev) => {
+        const has = prev?.includes(authUser?._id);
+        if (has) return prev.filter((id) => id !== authUser?._id);
+        return [...(prev || []), authUser?._id];
+      });
+
+      const res = await API.put(`/posts/like/${post._id}`);
+      console.debug("like API response", res.status, res.data);
+      if (typeof refresh === "function") refresh();
     } catch (err) {
       console.error("Like failed", err);
+      // revert to server state if available
+      setLocalLikes(post.likes || []);
     } finally {
       setIsLiking(false);
     }
@@ -117,7 +134,7 @@ export default function PostCard({ post, refresh }) {
           <div className="flex -space-x-1.5 overflow-hidden" onClick={() => toggleModal('likes', true)}>
              {/* Small Like Avatars for visual appeal */}
              <div className="text-xs font-semibold text-slate-500 cursor-pointer hover:text-indigo-600 transition-colors">
-               {post.likes?.length || 0} Likes
+               {localLikes?.length || 0} Likes
              </div>
           </div>
           <div 
@@ -130,7 +147,8 @@ export default function PostCard({ post, refresh }) {
 
         <div className="flex gap-2">
           <button
-            onClick={handleLike}
+            type="button"
+            onClick={(e) => handleLike(e)}
             disabled={isLiking}
             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${
               isLiked ? "bg-rose-50 text-rose-600" : "text-slate-600 hover:bg-slate-50 border border-transparent hover:border-slate-100"
@@ -141,7 +159,8 @@ export default function PostCard({ post, refresh }) {
           </button>
           
           <button
-            onClick={() => toggleModal('comments', true)}
+            type="button"
+            onClick={(e) => { if (e && e.preventDefault) e.preventDefault(); e.stopPropagation(); toggleModal('comments', true); }}
             className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 border border-transparent hover:border-slate-100"
           >
             <MessageCircle size={19} />
@@ -149,11 +168,8 @@ export default function PostCard({ post, refresh }) {
           </button>
 
           <button
-            onClick={() => {
-              const url = `${window.location.origin}/post/${post._id}`;
-              navigator.clipboard.writeText(url);
-              toast.success("Link copied!");
-            }}
+            type="button"
+            onClick={(e) => { if (e && e.preventDefault) e.preventDefault(); e.stopPropagation(); const url = `${window.location.origin}/post/${post._id}`; navigator.clipboard.writeText(url); toast.success("Link copied!"); }}
             className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 border border-transparent hover:border-slate-100"
           >
             <Share2 size={19} />

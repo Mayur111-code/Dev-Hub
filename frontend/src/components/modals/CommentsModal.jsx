@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 export default function CommentsModal({ post, close, refresh }) {
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [comments, setComments] = useState(post.comments || []);
   const authUser = useSelector((s) => s.user.user);
   const scrollRef = useRef(null);
 
@@ -17,16 +18,20 @@ export default function CommentsModal({ post, close, refresh }) {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [post.comments]);
+  }, [comments]);
 
-  const submitComment = async () => {
+  const submitComment = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!comment.trim() || isSubmitting) return;
 
     try {
       setIsSubmitting(true);
-      await API.put(`/posts/comment/${post._id}`, { text: comment });
+      console.debug("Submitting comment", post._id, comment);
+      const { data } = await API.put(`/posts/comment/${post._id}`, { text: comment });
+      console.debug("comment API response", data);
       setComment("");
-      refresh();
+      // update local comments from server response
+      if (data?.post?.comments) setComments(data.post.comments);
     } catch (err) {
       toast.error("Failed to post comment");
     } finally {
@@ -36,8 +41,8 @@ export default function CommentsModal({ post, close, refresh }) {
 
   const deleteComment = async (commentId) => {
     try {
-      await API.delete(`/posts/comment/${post._id}/${commentId}`);
-      refresh();
+      const { data } = await API.delete(`/posts/comment/${post._id}/${commentId}`);
+      if (data?.post?.comments) setComments(data.post.comments);
     } catch (err) {
       toast.error("Error deleting comment");
     }
@@ -61,7 +66,7 @@ export default function CommentsModal({ post, close, refresh }) {
 
         {/* Comments List */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-5 scroll-smooth">
-          {(post.comments || []).length === 0 ? (
+          {(comments || []).length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center opacity-60">
               <div className="bg-slate-50 p-4 rounded-full mb-3">
                 <MessageSquare size={32} className="text-slate-300" />
@@ -69,8 +74,8 @@ export default function CommentsModal({ post, close, refresh }) {
               <p className="text-slate-500 font-medium text-sm">No comments yet</p>
               <p className="text-slate-400 text-xs mt-1">Start the conversation!</p>
             </div>
-          ) : (
-            post.comments.map((c) => (
+            ) : (
+            comments.map((c) => (
               <div key={c._id} className="flex gap-3 group">
                 <Link to={`/profile/${c.user._id}`} onClick={close}>
                   <img
@@ -88,6 +93,7 @@ export default function CommentsModal({ post, close, refresh }) {
                       </Link>
                       {c.user._id === authUser._id && (
                         <button
+                          type="button"
                           onClick={() => deleteComment(c._id)}
                           className="text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
                         >
@@ -117,10 +123,11 @@ export default function CommentsModal({ post, close, refresh }) {
                 value={comment}
                 placeholder="Write a thoughtful reply..."
                 onChange={(e) => setComment(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && submitComment()}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitComment(); } }}
                 className="w-full pl-4 pr-12 py-2.5 bg-slate-100 border-none rounded-full focus:ring-2 focus:ring-indigo-500/20 text-sm transition-all outline-none"
               />
               <button
+                type="button"
                 onClick={submitComment}
                 disabled={!comment.trim() || isSubmitting}
                 className="absolute right-1.5 p-1.5 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 disabled:bg-slate-300 transition-all shadow-sm"
