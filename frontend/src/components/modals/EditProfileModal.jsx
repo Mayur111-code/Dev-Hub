@@ -39,7 +39,6 @@ export default function EditProfileModal({ user, close }) {
 
       toast.success("Profile updated!");
       close();
-      window.location.reload();
     } catch (err) {
       toast.error("Failed to update profile");
     } finally {

@@ -3,16 +3,17 @@ import { FiEdit2, FiTrash2, FiPlay, FiHeart, FiMessageCircle } from "react-icons
 import API from "../../api/axios";
 import { toast } from "react-toastify";
 
-export default function PostGridItem({ post, onOpen, isOwner, refresh }) {
+export default function PostGridItem({ post, onOpen, isOwner, refresh, onPostDelete }) {
 
   const handleDelete = async (e) => {
     e.stopPropagation();
     if (!window.confirm("Are you sure?")) return;
     try {
       await API.delete(`/posts/delete/${post._id}`);
-      refresh();
+      onPostDelete?.(post._id);
+      if (!onPostDelete && typeof refresh === "function") refresh(true);
       toast.success("Post deleted!");
-    } catch (err) {
+    } catch {
       toast.error("Delete failed");
     }
   };
@@ -50,14 +51,16 @@ export default function PostGridItem({ post, onOpen, isOwner, refresh }) {
     
       {isOwner && (
         <div className="absolute top-4 right-4 flex gap-2 translate-y-[-10px] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-          <button 
-            onClick={handleEditClick} 
+          <button
+            type="button"
+            onClick={handleEditClick}
             className="p-2.5 bg-white/90 backdrop-blur-md text-slate-900 rounded-xl shadow-xl hover:bg-indigo-600 hover:text-white transition-all"
           >
             <FiEdit2 size={16} />
           </button>
-          <button 
-            onClick={handleDelete} 
+          <button
+            type="button"
+            onClick={handleDelete}
             className="p-2.5 bg-white/90 backdrop-blur-md text-red-500 rounded-xl shadow-xl hover:bg-red-500 hover:text-white transition-all"
           >
             <FiTrash2 size={16} />

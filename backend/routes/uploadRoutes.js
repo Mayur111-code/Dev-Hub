@@ -7,7 +7,8 @@ const router = express.Router();
 
 // Allowed origins
 const allowedOrigins = [
- "https://the-dev-hub.vercel.app"
+  "https://the-dev-hub.vercel.app",
+  "http://localhost:5173",
 ];
 
 // CORS Middleware for this router

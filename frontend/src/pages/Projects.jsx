@@ -33,7 +33,7 @@ export default function Projects() {
     );
 
   return (
-    <div className="pt-24 px-4 sm:px-6 max-w-7xl mx-auto min-h-screen pb-20">
+    <div className="pt-24 px-4 sm:px-6 max-w-7xl mx-auto min-h-screen pb-20 bg-slate-50">
       
       {/* HEADER SECTION */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">

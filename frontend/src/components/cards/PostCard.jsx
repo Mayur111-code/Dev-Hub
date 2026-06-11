@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import API from "../../api/axios";
 import { Heart, MessageCircle, Share2, MoreHorizontal, Edit3, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -8,18 +8,23 @@ import LikesModal from "../modals/LikesModal";
 import CommentsModal from "../modals/CommentsModal";
 import EditPostModal from "../modals/EditPostModal";
 import timeAgo from "../../utils/timeAgo";
+import { normalizeLikeIds, normalizeLikedUsers, isPostLiked } from "../../utils/postHelpers";
 
-export default function PostCard({ post, refresh }) {
+export default function PostCard({ post, refresh, onPostUpdate, onPostDelete }) {
   const [isLiking, setIsLiking] = useState(false);
   const authUser = useSelector((s) => s.user.user);
-  const [localLikes, setLocalLikes] = useState(post.likes || []);
-  const isLikedLocal = localLikes?.includes(authUser?._id);
+  const [localLikes, setLocalLikes] = useState(() => normalizeLikeIds(post.likes));
+  const [localLikedUsers, setLocalLikedUsers] = useState(() => normalizeLikedUsers(post.likes, post.likedUsers));
+  const [localComments, setLocalComments] = useState(post.comments || []);
   const [modals, setModals] = useState({ likes: false, comments: false, edit: false });
   const [optionsOpen, setOptionsOpen] = useState(false);
 
+  useEffect(() => {
+    setLocalLikes(normalizeLikeIds(post.likes));
+    setLocalLikedUsers(normalizeLikedUsers(post.likes, post.likedUsers));
+    setLocalComments(post.comments || []);
+  }, [post._id, post.likes, post.comments, post.likedUsers]);
 
-  // Fix: No page reload caused by this code, but ensure author fallback is a pure const (does not involve any form or navigation)
-  // No problematic event causing reload here, so keep as is for stable behavior:
   const author = post.author || {
     _id: "unknown",
     name: "Anonymous",
@@ -27,29 +32,35 @@ export default function PostCard({ post, refresh }) {
   };
 
   const isOwner = authUser?._id === author._id;
-  const isLiked = isLikedLocal;
+  const isLiked = isPostLiked(localLikes, authUser?._id);
 
   const handleLike = async (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (e && e.stopPropagation) e.stopPropagation();
-    console.debug("handleLike clicked", post._id);
-    if (isLiking) return;
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    if (isLiking || !authUser?._id) return;
+
+    const prevLikes = localLikes;
+    const prevLikedUsers = localLikedUsers;
+
     try {
       setIsLiking(true);
-      // optimistic update
-      setLocalLikes((prev) => {
-        const has = prev?.includes(authUser?._id);
-        if (has) return prev.filter((id) => id !== authUser?._id);
-        return [...(prev || []), authUser?._id];
-      });
+      setLocalLikes((prev) =>
+        isPostLiked(prev, authUser._id)
+          ? prev.filter((id) => id !== authUser._id)
+          : [...prev, authUser._id]
+      );
 
-      const res = await API.put(`/posts/like/${post._id}`);
-      console.debug("like API response", res.status, res.data);
-      if (typeof refresh === "function") refresh();
+      const { data } = await API.put(`/posts/like/${post._id}`);
+      const updatedPost = data?.post;
+      if (updatedPost) {
+        setLocalLikes(normalizeLikeIds(updatedPost.likes));
+        setLocalLikedUsers(normalizeLikedUsers(updatedPost.likes, post.likedUsers));
+        onPostUpdate?.(updatedPost);
+      }
     } catch (err) {
-      console.error("Like failed", err);
-      // revert to server state if available
-      setLocalLikes(post.likes || []);
+      setLocalLikes(prevLikes);
+      setLocalLikedUsers(prevLikedUsers);
+      toast.error("Failed to update like");
     } finally {
       setIsLiking(false);
     }
@@ -57,23 +68,37 @@ export default function PostCard({ post, refresh }) {
 
   const deletePost = async () => {
     if (!window.confirm("Remove this post permanently?")) return;
-    await API.delete(`/posts/delete/${post._id}`);
-    refresh();
+    try {
+      await API.delete(`/posts/delete/${post._id}`);
+      onPostDelete?.(post._id);
+      if (!onPostDelete && typeof refresh === "function") refresh(true);
+      toast.success("Post deleted");
+    } catch {
+      toast.error("Failed to delete post");
+    }
   };
 
-  const toggleModal = (name, value) => setModals(prev => ({ ...prev, [name]: value }));
+  const toggleModal = (name, value) => setModals((prev) => ({ ...prev, [name]: value }));
+
+  const handlePostUpdate = (updatedPost) => {
+    if (updatedPost?.likes) {
+      setLocalLikes(normalizeLikeIds(updatedPost.likes));
+      setLocalLikedUsers(normalizeLikedUsers(updatedPost.likes, post.likedUsers));
+    }
+    if (updatedPost?.comments) setLocalComments(updatedPost.comments);
+    onPostUpdate?.(updatedPost);
+  };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden transition-all hover:border-slate-300">
-      
-      {/* Header */}
+    <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden transition-all duration-300 hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-50/50">
+
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link to={`/profile/${author._id}`}>
             <img src={author.avatar} alt={author.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-50" />
           </Link>
           <div>
-            <Link to={`/profile/${author._id}`} className="font-bold text-slate-900 text-sm hover:underline">
+            <Link to={`/profile/${author._id}`} className="font-semibold text-slate-900 text-sm hover:text-indigo-600 transition-colors">
               {author.name}
             </Link>
             <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">
@@ -84,19 +109,21 @@ export default function PostCard({ post, refresh }) {
 
         {isOwner && (
           <div className="relative">
-            <button onClick={() => setOptionsOpen(!optionsOpen)} className="p-2 text-slate-400 hover:bg-slate-50 rounded-full">
+            <button type="button" onClick={() => setOptionsOpen(!optionsOpen)} className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors">
               <MoreHorizontal size={20} />
             </button>
-            
+
             {optionsOpen && (
-              <div className="absolute right-0 mt-2 w-40 bg-white border border-slate-100 shadow-xl rounded-xl z-50 py-1 overflow-hidden">
-                <button 
-                  onClick={() => { toggleModal('edit', true); setOptionsOpen(false); }}
+              <div className="absolute right-0 mt-2 w-40 bg-white border border-slate-100 shadow-xl rounded-xl z-50 py-1 overflow-hidden animate-in fade-in zoom-in duration-150">
+                <button
+                  type="button"
+                  onClick={() => { toggleModal("edit", true); setOptionsOpen(false); }}
                   className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50"
                 >
                   <Edit3 size={16} /> Edit Post
                 </button>
-                <button 
+                <button
+                  type="button"
                   onClick={deletePost}
                   className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50"
                 >
@@ -108,14 +135,12 @@ export default function PostCard({ post, refresh }) {
         )}
       </div>
 
-      {/* Content */}
       <div className="px-4 pb-3">
         <p className="text-slate-800 text-[15px] leading-relaxed whitespace-pre-wrap">
           {post.content}
         </p>
       </div>
 
-      {/* Media Section */}
       {post.image && (
         <div className="bg-slate-50 border-y border-slate-100 flex justify-center">
           {post.image.includes(".mp4") ? (
@@ -123,45 +148,46 @@ export default function PostCard({ post, refresh }) {
               <source src={post.image} type="video/mp4" />
             </video>
           ) : (
-            <img src={post.image} alt="post" className="w-full h-auto max-h-[500px] object-contain shadow-inner" />
+            <img src={post.image} alt="post" className="w-full h-auto max-h-[500px] object-contain" />
           )}
         </div>
       )}
 
-      {/* Action Bar */}
       <div className="p-3">
         <div className="flex items-center justify-between mb-3 px-1">
-          <div className="flex -space-x-1.5 overflow-hidden" onClick={() => toggleModal('likes', true)}>
-             {/* Small Like Avatars for visual appeal */}
-             <div className="text-xs font-semibold text-slate-500 cursor-pointer hover:text-indigo-600 transition-colors">
-               {localLikes?.length || 0} Likes
-             </div>
-          </div>
-          <div 
-            onClick={() => toggleModal('comments', true)}
-            className="text-xs font-semibold text-slate-500 cursor-pointer hover:text-indigo-600"
+          <button
+            type="button"
+            onClick={() => toggleModal("likes", true)}
+            className="text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors"
           >
-            {post.comments?.length || 0} Comments
-          </div>
+            {localLikes.length} {localLikes.length === 1 ? "Like" : "Likes"}
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleModal("comments", true)}
+            className="text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors"
+          >
+            {localComments.length} {localComments.length === 1 ? "Comment" : "Comments"}
+          </button>
         </div>
 
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={(e) => handleLike(e)}
+            onClick={handleLike}
             disabled={isLiking}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${
-              isLiked ? "bg-rose-50 text-rose-600" : "text-slate-600 hover:bg-slate-50 border border-transparent hover:border-slate-100"
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-[0.98] ${
+              isLiked ? "bg-rose-50 text-rose-600 ring-1 ring-rose-100" : "text-slate-600 hover:bg-slate-50"
             }`}
           >
-            <Heart size={19} fill={isLiked ? "currentColor" : "none"} />
-            Like
+            <Heart size={19} fill={isLiked ? "currentColor" : "none"} className={isLiking ? "animate-pulse" : ""} />
+            {isLiked ? "Liked" : "Like"}
           </button>
-          
+
           <button
             type="button"
-            onClick={(e) => { if (e && e.preventDefault) e.preventDefault(); e.stopPropagation(); toggleModal('comments', true); }}
-            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 border border-transparent hover:border-slate-100"
+            onClick={() => toggleModal("comments", true)}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all duration-200 active:scale-[0.98]"
           >
             <MessageCircle size={19} />
             Comment
@@ -169,8 +195,12 @@ export default function PostCard({ post, refresh }) {
 
           <button
             type="button"
-            onClick={(e) => { if (e && e.preventDefault) e.preventDefault(); e.stopPropagation(); const url = `${window.location.origin}/post/${post._id}`; navigator.clipboard.writeText(url); toast.success("Link copied!"); }}
-            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 border border-transparent hover:border-slate-100"
+            onClick={() => {
+              const url = `${window.location.origin}/post/${post._id}`;
+              navigator.clipboard.writeText(url);
+              toast.success("Link copied!");
+            }}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all duration-200 active:scale-[0.98]"
           >
             <Share2 size={19} />
             Share
@@ -178,10 +208,23 @@ export default function PostCard({ post, refresh }) {
         </div>
       </div>
 
-      {/* Modals */}
-      {modals.likes && <LikesModal likes={post.likedUsers || []} close={() => toggleModal('likes', false)} />}
-      {modals.comments && <CommentsModal post={post} refresh={refresh} close={() => toggleModal('comments', false)} />}
-      {modals.edit && <EditPostModal post={post} refresh={refresh} close={() => toggleModal('edit', false)} />}
+      {modals.likes && <LikesModal likes={localLikedUsers} close={() => toggleModal("likes", false)} />}
+      {modals.comments && (
+        <CommentsModal
+          post={post}
+          initialComments={localComments}
+          onCommentsChange={setLocalComments}
+          onPostUpdate={handlePostUpdate}
+          close={() => toggleModal("comments", false)}
+        />
+      )}
+      {modals.edit && (
+        <EditPostModal
+          post={post}
+          refresh={() => typeof refresh === "function" && refresh(true)}
+          close={() => toggleModal("edit", false)}
+        />
+      )}
     </div>
   );
 }

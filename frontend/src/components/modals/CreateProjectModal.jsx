@@ -33,22 +33,28 @@ export default function CreateProjectModal({ close, refresh }) {
     if (!title.trim() || !desc.trim() || !teamSize) return toast.error("All fields are required");
     setLoading(true);
     try {
-      const form = new FormData();
-      form.append("title", title);
-      form.append("description", desc);
-      form.append("tags", tags);
-      form.append("teamSize", teamSize);
-      if (file) form.append("file", file);
+      let imageUrl = null;
 
-      await API.post("/projects/create", form, {
-        headers: { "Content-Type": "multipart/form-data" },
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const { data } = await API.post("/upload/file", formData);
+        imageUrl = data.url;
+      }
+
+      await API.post("/projects/create", {
+        title,
+        description: desc,
+        tags,
+        teamSize,
+        image: imageUrl,
       });
 
-      toast.success("Project launched! 🚀");
-      refresh();
+      toast.success("Project created successfully!");
+      if (typeof refresh === "function") refresh();
       close();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Launch failed");
+      toast.error(err?.response?.data?.message || err?.response?.data?.error || "Failed to create project");
     } finally {
       setLoading(false);
     }
@@ -167,10 +173,11 @@ export default function CreateProjectModal({ close, refresh }) {
 
         {/* FOOTER BUTTONS */}
         <div className="p-6 md:p-8 bg-white/5 border-t border-white/5 flex gap-3">
-          <button onClick={close} className="flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">
-            Abort
+          <button type="button" onClick={close} className="flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">
+            Cancel
           </button>
           <button
+            type="button"
             onClick={createProject}
             disabled={loading}
             className="flex-[2] py-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl shadow-xl shadow-indigo-600/10 transition-all flex items-center justify-center gap-2 group"

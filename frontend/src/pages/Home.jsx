@@ -22,22 +22,36 @@ export default function Home() {
     if (!user?._id) navigate("/login");
   }, [user, navigate]);
 
-  // Fetch Logic
-  const fetchPosts = useCallback(async (isRefresh = false) => {
+  const fetchPosts = useCallback(async (silent = false, showToast = false) => {
     try {
-      if (!isRefresh) setLoading(true);
+      if (!silent) setLoading(true);
       const { data } = await API.get("/posts/all");
       const safePosts = data.map((post) => ({
         ...post,
         user: post.user || { name: "Anonymous", _id: "unknown" },
       }));
       setPosts(safePosts);
-      if (isRefresh) toast.success("Feed updated!");
-    } catch (error) {
+      if (showToast) toast.success("Feed updated!");
+    } catch {
       toast.error("Failed to load feed");
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const handlePostUpdate = useCallback((updatedPost) => {
+    if (!updatedPost?._id) return;
+    setPosts((prev) =>
+      prev.map((p) =>
+        p._id === updatedPost._id
+          ? { ...p, ...updatedPost, likedUsers: updatedPost.likes }
+          : p
+      )
+    );
+  }, []);
+
+  const handlePostDelete = useCallback((postId) => {
+    setPosts((prev) => prev.filter((p) => p._id !== postId));
   }, []);
 
   useEffect(() => {
@@ -73,19 +87,20 @@ export default function Home() {
   if (loading) return <LoadingSkeleton />;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pt-16 pb-12">
-      {showCreateModal && <CreatePostModal close={() => setShowCreateModal(false)} refresh={fetchPosts} />}
+    <div className="min-h-screen bg-slate-50 pt-16 pb-12">
+      {showCreateModal && <CreatePostModal close={() => setShowCreateModal(false)} refresh={() => fetchPosts(true)} />}
 
       <div className="max-w-5xl mx-auto px-4 mt-4">
      
         <header className="flex justify-between items-end mb-8">
           <div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Community Feed</h1>
-            <p className="text-slate-500 mt-1">Explore what's happening in tech.</p>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Community Feed</h1>
+            <p className="text-slate-500 mt-1.5 text-sm">Explore what's happening in tech.</p>
           </div>
-          <button 
+          <button
+            type="button"
             onClick={() => setShowCreateModal(true)}
-            className="hidden md:flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm"
+            className="hidden md:flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-md shadow-indigo-100 hover:-translate-y-0.5 active:scale-[0.98]"
           >
             <Plus size={18} /> New Post
           </button>
@@ -111,7 +126,7 @@ export default function Home() {
                   </button>
                 ))}
               </div>
-              <button onClick={() => fetchPosts(true)} className="text-slate-400 hover:text-indigo-600 transition-colors">
+              <button type="button" onClick={() => fetchPosts(true, true)} className="text-slate-400 hover:text-indigo-600 transition-colors">
                 <RefreshCw size={18} />
               </button>
             </div>
@@ -119,7 +134,15 @@ export default function Home() {
             {/* Posts List */}
             {displayPosts.length > 0 ? (
               <div className="space-y-4">
-                {displayPosts.map(post => <PostCard key={post._id} post={post} refresh={fetchPosts} />)}
+                {displayPosts.map((post) => (
+                  <PostCard
+                    key={post._id}
+                    post={post}
+                    refresh={() => fetchPosts(true)}
+                    onPostUpdate={handlePostUpdate}
+                    onPostDelete={handlePostDelete}
+                  />
+                ))}
               </div>
             ) : (
               <EmptyState onReset={() => {setSearchQuery(""); setActiveFilter("all");}} />

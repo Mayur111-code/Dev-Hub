@@ -7,16 +7,14 @@ import Notification from "../model/Notification.js";
 =========================================================== */
 export const createProject = async (req, res) => {
   try {
-    const { title, description, tags, postId, teamSize } = req.body;
-
-    const bannerUrl = req.file ? req.file.path : null;
+    const { title, description, tags, postId, teamSize, image } = req.body;
 
     const project = await Project.create({
       owner: req.user.id,
       title,
       description,
       tags: Array.isArray(tags) ? tags : tags.split(",").map(t => t.trim()),
-      image: bannerUrl,
+      image: image || null,
       teamSize: Number(teamSize),   // now teamSize exists
       postId,
       team: [req.user.id]
@@ -80,7 +78,7 @@ export const getProjectById = async (req, res) => {
 =========================================================== */
 export const updateProject = async (req, res) => {
   try {
-    const { title, description, tags } = req.body;
+    const { title, description, tags, image } = req.body;
 
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ message: "Project not found" });
@@ -88,12 +86,10 @@ export const updateProject = async (req, res) => {
     if (project.owner.toString() !== req.user.id)
       return res.status(403).json({ message: "Not allowed" });
 
-    const bannerUrl = req.file ? req.file.path : project.image;
-
     project.title = title || project.title;
     project.description = description || project.description;
-    project.tags = tags ? tags.split(",").map(t => t.trim()) : project.tags;
-    project.image = bannerUrl;
+    project.tags = tags ? (Array.isArray(tags) ? tags : tags.split(",").map(t => t.trim())) : project.tags;
+    if (image) project.image = image;
 
     await project.save();
 

@@ -217,7 +217,11 @@ export const deleteComment = async (req, res) => {
     comment.deleteOne();
     await post.save();
 
-    res.json({ message: "Comment deleted", post });
+    const updated = await Post.findById(post._id)
+      .populate("author", "name avatar")
+      .populate("comments.user", "name avatar");
+
+    res.json({ message: "Comment deleted", post: updated });
 
   } catch (err) {
     console.error(err);

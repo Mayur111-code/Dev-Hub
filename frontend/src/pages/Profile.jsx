@@ -36,8 +36,8 @@ export default function Profile() {
   // Modal State for Followers/Following
   const [listModal, setListModal] = useState({ show: false, title: "", data: [] });
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const fetchData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [{ data: u }, { data: p }] = await Promise.all([
         API.get(`/user/${id}`),
@@ -47,17 +47,43 @@ export default function Profile() {
       setUser(u);
       setPosts(p);
       setFollowersCount(u.followers?.length || 0);
-      
-      const isActuallyFollowing = authUser 
-        ? (u.followers || []).some(f => (f._id || f) === authUser._id) 
+
+      const isActuallyFollowing = authUser
+        ? (u.followers || []).some((f) => (f._id || f) === authUser._id)
         : false;
       setIsFollowing(isActuallyFollowing);
-    } catch (err) {
-      toast.error("Profile load karayla problem yetoy!");
+
+      setSelectedPost((prev) => {
+        if (!prev) return prev;
+        return p.find((post) => post._id === prev._id) || prev;
+      });
+    } catch {
+      toast.error("Failed to load profile");
     } finally {
       setLoading(false);
     }
   }, [id, authUser?._id]);
+
+  const handlePostUpdate = useCallback((updatedPost) => {
+    if (!updatedPost?._id) return;
+    setPosts((prev) =>
+      prev.map((p) =>
+        p._id === updatedPost._id
+          ? { ...p, ...updatedPost, likedUsers: updatedPost.likes }
+          : p
+      )
+    );
+    setSelectedPost((prev) =>
+      prev?._id === updatedPost._id
+        ? { ...prev, ...updatedPost, likedUsers: updatedPost.likes }
+        : prev
+    );
+  }, []);
+
+  const handlePostDelete = useCallback((postId) => {
+    setPosts((prev) => prev.filter((p) => p._id !== postId));
+    setSelectedPost((prev) => (prev?._id === postId ? null : prev));
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -181,7 +207,16 @@ export default function Profile() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {activeTab === 'posts' ? (
             posts.length > 0 ? (
-              posts.map(post => <PostGridItem key={post._id} post={post} onOpen={() => setSelectedPost(post)} isOwner={isOwner} refresh={fetchData} />)
+              posts.map((post) => (
+                <PostGridItem
+                  key={post._id}
+                  post={post}
+                  onOpen={() => setSelectedPost(post)}
+                  isOwner={isOwner}
+                  refresh={() => fetchData(true)}
+                  onPostDelete={handlePostDelete}
+                />
+              ))
             ) : (
               <div className="col-span-full py-20 text-center bg-white rounded-[2rem] border border-dashed border-slate-200 text-slate-300 font-bold uppercase tracking-tighter">No Posts Found</div>
             )
@@ -212,7 +247,15 @@ export default function Profile() {
       )}
 
       {openEdit && <EditProfileModal user={user} close={() => { setOpenEdit(false); fetchData(); }} />}
-      {selectedPost && <PostModal post={selectedPost} close={() => setSelectedPost(null)} refresh={fetchData} />}
+      {selectedPost && (
+        <PostModal
+          post={selectedPost}
+          close={() => setSelectedPost(null)}
+          refresh={() => fetchData(true)}
+          onPostUpdate={handlePostUpdate}
+          onPostDelete={handlePostDelete}
+        />
+      )}
     </div>
   );
 }

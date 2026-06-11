@@ -34,11 +34,12 @@ export default function ProjectCard({ project, refresh }) {
           {project.image ? (
             <img
               src={project.image}
-              className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${isFull ? 'grayscale-[0.5]' : ''}`}
+              className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isFull ? "grayscale-[0.5]" : ""}`}
               alt={project.title}
+              loading="lazy"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
+            <div className="w-full h-full bg-linear-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
               <span className="text-4xl">🚀</span>
             </div>
           )}

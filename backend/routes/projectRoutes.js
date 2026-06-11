@@ -12,19 +12,13 @@ import {
 } from "../controllers/projectController.js";
 
 import authMiddleware from "../middleware/authMiddleware.js";
-import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
 /* ---------------------------
    CREATE PROJECT
 ---------------------------- */
-router.post(
-  "/create",
-  authMiddleware,
-  upload.single("file"),
-  createProject
-);
+router.post("/create", authMiddleware, createProject);
 
 /* ---------------------------
    GET ALL PROJECTS
@@ -47,12 +41,7 @@ router.get(
 /* ---------------------------
    UPDATE PROJECT
 ---------------------------- */
-router.put(
-  "/update/:id",
-  authMiddleware,
-  upload.single("file"),
-  updateProject
-);
+router.put("/update/:id", authMiddleware, updateProject);
 
 /* ---------------------------
    DELETE PROJECT

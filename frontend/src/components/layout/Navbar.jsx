@@ -57,7 +57,6 @@ export default function Navbar() {
       {openCreate && (
         <CreateProjectModal
           close={() => setOpenCreate(false)}
-          refresh={() => window.location.reload()}
         />
       )}
 
