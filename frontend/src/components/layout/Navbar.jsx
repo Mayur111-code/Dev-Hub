@@ -95,7 +95,7 @@ export default function Navbar() {
           </Link>
 
           {/* CENTER: SEARCH (Floating Style) */}
-          <div className="hidden md:flex flex-1 justify-center max-w-md px-8">
+          <div className="flex flex-1 justify-center max-w-md px-8">
             <div className="relative w-full group">
               <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-400 transition-colors" />
               <input
