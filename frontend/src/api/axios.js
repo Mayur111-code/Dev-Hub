@@ -2,14 +2,14 @@ import axios from "axios";
 
 
 const API = axios.create({
-  baseURL:// "https://dev-hub-16hk.onrender.com/api" ||
-   "http://localhost:3000/api",
+  baseURL: "https://dev-hub-16hk.onrender.com/api"
+  //"http://localhost:3000/api",
 });
 
 
 API.interceptors.response.use(
   (res) => {
-   
+
     return res;
   },
   (err) => {

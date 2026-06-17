@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
-import cloudinary from "./config/cloudinary.js";   
+import cloudinary from "./config/cloudinary.js";
 
 dotenv.config();
 connectDB();
@@ -10,8 +10,8 @@ connectDB();
 const app = express();
 
 const allowedOrigins = [
-  //"https://the-dev-hub.vercel.app" ||
-   "http://localhost:5173",
+  "https://the-dev-hub.vercel.app"
+  //"http://localhost:5173",
 ];
 
 app.use(
