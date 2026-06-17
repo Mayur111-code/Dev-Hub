@@ -2,13 +2,14 @@ import axios from "axios";
 
 
 const API = axios.create({
-  baseURL: "https://dev-hub-16hk.onrender.com/api",
+  baseURL:// "https://dev-hub-16hk.onrender.com/api" ||
+   "http://localhost:3000/api",
 });
 
-// Log requests/responses for debugging like/comment reload issue
+
 API.interceptors.response.use(
   (res) => {
-    // optional: console.debug("API response", res.config && res.config.url, res.status);
+   
     return res;
   },
   (err) => {

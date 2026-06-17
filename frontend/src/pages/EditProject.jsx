@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../api/axios";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Camera, Save, X, Tag, FileText, Layout } from "lucide-react";
 
 export default function EditProject() {

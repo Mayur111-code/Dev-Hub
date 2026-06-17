@@ -230,3 +230,40 @@ export const deleteComment = async (req, res) => {
 };
 
 
+// UPDATE/EDIT COMMENT
+export const updateComment = async (req, res) => {
+  try {
+    const { id, commentId } = req.params;
+    const { text } = req.body;
+
+    if (!text || !text.trim()) {
+      return res.status(400).json({ message: "Comment text required" });
+    }
+
+    const post = await Post.findById(id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    const comment = post.comments.id(commentId);
+    if (!comment) return res.status(404).json({ message: "Comment not found" });
+
+    if (comment.user.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not allowed" });
+    }
+
+    comment.text = text;
+    await post.save();
+
+    const updated = await Post.findById(post._id)
+      .populate("author", "name avatar")
+      .populate("comments.user", "name avatar");
+
+    res.json({ message: "Comment updated", post: updated });
+
+  } catch (err) {
+    console.error("Error updating comment:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+

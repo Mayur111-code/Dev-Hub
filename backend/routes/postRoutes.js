@@ -8,6 +8,7 @@ import {
   deletePost,
   getPostsByUser,
   deleteComment,
+  updateComment,
   
 } from "../controllers/postController.js";
 
@@ -36,6 +37,7 @@ router.put("/like/:id", authMiddleware, likePost);
 
 // ADD COMMENT
 router.put("/comment/:id", authMiddleware, addComment);
+router.put("/comment/:id/:commentId", authMiddleware, updateComment);
 router.delete("/comment/:id/:commentId", authMiddleware, deleteComment);
 
 

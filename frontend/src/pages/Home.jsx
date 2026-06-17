@@ -1,10 +1,12 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "motion/react";
 import API from "../api/axios";
 import PostCard from "../components/cards/PostCard";
-import { Plus, Users, TrendingUp, Clock, Search, Sparkles, RefreshCw } from "lucide-react";
-import { toast } from "react-toastify";
+import Navbar from "../components/layout/Navbar";
+import { Plus, TrendingUp, Clock, Sparkles, RefreshCw, Flame, Zap } from "lucide-react";
+import { toast } from "sonner";
 import CreatePostModal from "../components/modals/CreatePostModal";
 
 export default function Home() {
@@ -17,7 +19,6 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
-  // Auth Protection
   useEffect(() => {
     if (!user?._id) navigate("/login");
   }, [user, navigate]);
@@ -58,153 +59,275 @@ export default function Home() {
     fetchPosts();
   }, [fetchPosts]);
 
- 
   const displayPosts = useMemo(() => {
     let result = [...posts];
-
-    // Search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(p => 
-        p.content?.toLowerCase().includes(q) || 
-        p.user?.name?.toLowerCase().includes(q)
+      result = result.filter(
+        (p) =>
+          p.content?.toLowerCase().includes(q) ||
+          p.user?.name?.toLowerCase().includes(q)
       );
     }
-
-    // Sort/Filter
     switch (activeFilter) {
       case "trending":
-        return result.sort((a, b) => ((b.likes?.length || 0) + (b.comments?.length || 0)) - ((a.likes?.length || 0) + (a.comments?.length || 0)));
+        return result.sort(
+          (a, b) =>
+            (b.likes?.length || 0) +
+            (b.comments?.length || 0) -
+            ((a.likes?.length || 0) + (a.comments?.length || 0))
+        );
       case "recent":
-        return result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        return result.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
       case "popular":
-        return result.sort((a, b) => (b.likes?.length || 0) - (a.likes?.length || 0));
+        return result.sort(
+          (a, b) => (b.likes?.length || 0) - (a.likes?.length || 0)
+        );
       default:
         return result;
     }
   }, [posts, searchQuery, activeFilter]);
 
-  if (loading) return <LoadingSkeleton />;
+  const filters = [
+    { id: "all", label: "All", icon: <Zap size={14} /> },
+    { id: "trending", label: "Trending", icon: <Flame size={14} /> },
+    { id: "recent", label: "Recent", icon: <Clock size={14} /> },
+    { id: "popular", label: "Popular", icon: <TrendingUp size={14} /> },
+  ];
+
+  if (loading) return <LoadingScreen />;
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-16 pb-12">
-      {showCreateModal && <CreatePostModal close={() => setShowCreateModal(false)} refresh={() => fetchPosts(true)} />}
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900">
+      <Navbar />
+      {showCreateModal && (
+        <CreatePostModal
+          close={() => setShowCreateModal(false)}
+          refresh={() => fetchPosts(true)}
+        />
+      )}
 
-      <div className="max-w-5xl mx-auto px-4 mt-4">
-     
-        <header className="flex justify-between items-end mb-8">
+      <div className="max-w-5xl mx-auto px-4 pt-28 pb-16">
+        {/* Header */}
+        <motion.header
+          className="flex justify-between items-end mb-10"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Community Feed</h1>
-            <p className="text-slate-500 mt-1.5 text-sm">Explore what's happening in tech.</p>
+            <motion.div
+              className="flex items-center gap-2 mb-3"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <span className="px-3 py-1 bg-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-wider rounded-full border border-indigo-500/30 flex items-center gap-1">
+                <Zap size={12} /> Community Feed
+              </span>
+            </motion.div>
+            <motion.h1
+              className="text-4xl sm:text-5xl font-black text-white tracking-tight"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              What's Happening
+            </motion.h1>
+            <motion.p
+              className="text-slate-400 mt-2 text-base"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              Explore what's trending in the dev community.
+            </motion.p>
           </div>
-          <button
+
+          <motion.button
             type="button"
             onClick={() => setShowCreateModal(true)}
-            className="hidden md:flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-md shadow-indigo-100 hover:-translate-y-0.5 active:scale-[0.98]"
+            className="hidden md:flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/20 transition-all"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            whileHover={{ y: -2, boxShadow: "0 20px 25px -5px rgba(99,102,241,0.4)" }}
+            whileTap={{ scale: 0.95 }}
           >
-            <Plus size={18} /> New Post
-          </button>
-        </header>
+            <Plus size={20} /> New Post
+          </motion.button>
+        </motion.header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* --- Left Side: Filters & Feed --- */}
+          {/* Feed */}
           <main className="lg:col-span-8 space-y-6">
-           
-
-            {/* Content Control */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-              <div className="flex gap-6">
-                {['all', 'trending', 'recent'].map((f) => (
+            {/* Filter Bar */}
+            <motion.div
+              className="flex items-center justify-between"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.25 }}
+            >
+              <div className="flex items-center gap-1 bg-slate-800/50 border border-slate-700/50 rounded-xl p-1">
+                {filters.map((f) => (
                   <button
-                    key={f}
-                    onClick={() => setActiveFilter(f)}
-                    className={`pb-2 px-1 text-sm font-semibold capitalize transition-all ${
-                      activeFilter === f ? "border-b-2 border-indigo-600 text-indigo-600" : "text-slate-500 hover:text-slate-800"
+                    key={f.id}
+                    onClick={() => setActiveFilter(f.id)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+                      activeFilter === f.id
+                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
+                        : "text-slate-400 hover:text-white hover:bg-white/5"
                     }`}
                   >
-                    {f}
+                    {f.icon} {f.label}
                   </button>
                 ))}
               </div>
-              <button type="button" onClick={() => fetchPosts(true, true)} className="text-slate-400 hover:text-indigo-600 transition-colors">
+              <button
+                type="button"
+                onClick={() => fetchPosts(true, true)}
+                className="p-2.5 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-xl transition-all"
+              >
                 <RefreshCw size={18} />
               </button>
-            </div>
+            </motion.div>
 
-            {/* Posts List */}
-            {displayPosts.length > 0 ? (
-              <div className="space-y-4">
-                {displayPosts.map((post) => (
-                  <PostCard
-                    key={post._id}
-                    post={post}
-                    refresh={() => fetchPosts(true)}
-                    onPostUpdate={handlePostUpdate}
-                    onPostDelete={handlePostDelete}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyState onReset={() => {setSearchQuery(""); setActiveFilter("all");}} />
-            )}
+            {/* Posts */}
+            <AnimatePresence mode="popLayout">
+              {displayPosts.length > 0 ? (
+                <motion.div
+                  className="space-y-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ staggerChildren: 0.06 }}
+                >
+                  {displayPosts.map((post, idx) => (
+                    <motion.div
+                      key={post._id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                    >
+                      <PostCard
+                        post={post}
+                        refresh={() => fetchPosts(true)}
+                        onPostUpdate={handlePostUpdate}
+                        onPostDelete={handlePostDelete}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center py-20 bg-slate-800/30 border border-dashed border-slate-700/50 rounded-2xl"
+                >
+                  <div className="text-5xl mb-4">🔍</div>
+                  <h3 className="text-lg font-bold text-white">No results found</h3>
+                  <p className="text-slate-400 mb-6">Try adjusting your filters.</p>
+                  <button
+                    onClick={() => { setSearchQuery(""); setActiveFilter("all"); }}
+                    className="text-indigo-400 font-semibold hover:text-indigo-300 transition-colors"
+                  >
+                    Clear all filters
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </main>
 
-          {/* --- Right Side: Stats & Info --- */}
+          {/* Sidebar */}
           <aside className="hidden lg:block lg:col-span-4 space-y-6">
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-              <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Sparkles size={18} className="text-amber-500" /> Platform Stats
+            <motion.div
+              className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 backdrop-blur-sm"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+                <Sparkles size={18} className="text-amber-400" /> Platform Stats
               </h3>
               <div className="space-y-4">
-                <StatRow label="Global Posts" value={posts.length} color="text-indigo-600" />
-                <StatRow label="Total Reactions" value={posts.reduce((acc, p) => acc + (p.likes?.length || 0), 0)} color="text-rose-500" />
+                <StatRow
+                  label="Global Posts"
+                  value={posts.length}
+                  color="text-indigo-400"
+                />
+                <StatRow
+                  label="Total Reactions"
+                  value={posts.reduce((acc, p) => acc + (p.likes?.length || 0), 0)}
+                  color="text-rose-400"
+                />
+                <StatRow
+                  label="Comments"
+                  value={posts.reduce((acc, p) => acc + (p.comments?.length || 0), 0)}
+                  color="text-emerald-400"
+                />
               </div>
-            </div>
-            <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-6 text-white shadow-lg">
+            </motion.div>
+
+            <motion.div
+              className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-6 text-white shadow-lg shadow-indigo-500/20"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              whileHover={{ scale: 1.02 }}
+            >
               <h4 className="font-bold text-lg mb-2">Upgrade your skills!</h4>
-              <p className="text-indigo-100 text-sm mb-4">Join our weekly developer workshops and grow together.</p>
-              <button className="w-full bg-white text-indigo-600 py-2 rounded-lg font-bold text-sm hover:bg-indigo-50 transition-colors">Explore Events</button>
-            </div>
+              <p className="text-indigo-200 text-sm mb-4">
+                Join our weekly developer workshops and grow together.
+              </p>
+              <button className="w-full bg-white/10 border border-white/20 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-white/20 transition-colors backdrop-blur-sm">
+                Explore Events
+              </button>
+            </motion.div>
           </aside>
         </div>
       </div>
 
       {/* Mobile FAB */}
-      <button 
+      <motion.button
         onClick={() => setShowCreateModal(true)}
-        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-full shadow-2xl shadow-indigo-500/40 flex items-center justify-center"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.92 }}
       >
-        <Plus size={28} />
-      </button>
+        <Plus size={26} />
+      </motion.button>
     </div>
   );
 }
 
-// Sub-components for cleaner code
 const StatRow = ({ label, value, color }) => (
   <div className="flex justify-between items-center">
-    <span className="text-slate-500 text-sm">{label}</span>
-    <span className={`font-bold ${color}`}>{value}</span>
+    <span className="text-slate-400 text-sm">{label}</span>
+    <motion.span
+      className={`font-bold ${color}`}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 0.4 }}
+    >
+      {value}
+    </motion.span>
   </div>
 );
 
-const EmptyState = ({ onReset }) => (
-  <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
-    <div className="text-5xl mb-4">🔍</div>
-    <h3 className="text-lg font-bold text-slate-800">No results found</h3>
-    <p className="text-slate-500 mb-6">Try adjusting your filters or search terms.</p>
-    <button onClick={onReset} className="text-indigo-600 font-semibold hover:underline">Clear all filters</button>
-  </div>
-);
-
-const LoadingSkeleton = () => (
-  <div className="max-w-5xl mx-auto px-4 pt-24 space-y-8 animate-pulse">
-    <div className="h-10 bg-slate-200 rounded-lg w-1/3"></div>
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      <div className="lg:col-span-8 space-y-6">
-        <div className="h-14 bg-slate-200 rounded-xl w-full"></div>
-        {[1,2,3].map(i => <div key={i} className="h-64 bg-slate-200 rounded-2xl w-full"></div>)}
-      </div>
-    </div>
+const LoadingScreen = () => (
+  <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 flex flex-col items-center justify-center">
+    <motion.div
+      animate={{ rotate: 360 }}
+      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+      className="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full mb-4"
+    />
+    <motion.p
+      className="text-slate-400 font-semibold"
+      animate={{ opacity: [0.6, 1, 0.6] }}
+      transition={{ duration: 1.5, repeat: Infinity }}
+    >
+      Loading community feed…
+    </motion.p>
   </div>
 );

@@ -12,6 +12,7 @@ const projectSchema = new mongoose.Schema({
 
   techStack: { type: [String], default: [] },   // ⭐ NEW
   rolesRequired: { type: [String], default: [] },  // ⭐ NEW
+  tags: { type: [String], default: [] },
 
   image: { type: String, default: "" },
 

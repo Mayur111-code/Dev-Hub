@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const Help = () => {
     const currentYear = new Date().getFullYear();
@@ -41,9 +42,16 @@ const Help = () => {
                             <a href="mailto:mayurborse7440@gmail.com" className="block w-full text-center py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-all">
                                 Email Support
                             </a>
-                            <Link to="/live-chat" className="block w-full text-center py-2.5 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600 transition-all">
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    toast.info("Live Chat is currently offline. Please use Email Support.");
+                                }}
+                                className="block w-full text-center py-2.5 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600 transition-all cursor-pointer"
+                            >
                                 Start Live Chat
-                            </Link>
+                            </button>
                         </div>
                     </div>
 

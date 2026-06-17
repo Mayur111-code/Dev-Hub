@@ -9,7 +9,8 @@ import {
 } from "react-icons/fi";
 import CreateProjectModal from "../modals/CreateProjectModal";
 import API from "../../api/axios";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
+import { debounce } from "../../utils/debounce";
 
 export default function Navbar() {
   const dispatch = useDispatch();
@@ -36,20 +37,31 @@ export default function Navbar() {
     toast.success("Connection Terminated 👋");
   };
 
-  const handleSearch = async (text) => {
+  const debouncedSearch = useRef(
+    debounce(async (text) => {
+      if (text.trim() === "") {
+        setResults([]);
+        setShowSearch(false);
+        return;
+      }
+      try {
+        const { data } = await API.get(`/search?q=${text}`);
+        setResults(data);
+        setShowSearch(true);
+      } catch (err) {
+        console.error(err);
+      }
+    }, 300)
+  ).current;
+
+  const handleSearch = (text) => {
     setSearch(text);
     if (text.trim() === "") {
       setResults([]);
       setShowSearch(false);
       return;
     }
-    try {
-      const { data } = await API.get(`/search?q=${text}`);
-      setResults(data);
-      setShowSearch(true);
-    } catch (err) {
-      console.error(err);
-    }
+    debouncedSearch(text);
   };
 
   return (
@@ -77,7 +89,7 @@ export default function Navbar() {
                 className="relative w-9 h-9 object-contain rounded-lg border border-white/10"
               />
             </div>
-            <span className="hidden sm:block text-xl font-bold tracking-widest uppercase text-slate-950">
+            <span className="hidden sm:block text-xl font-bold tracking-widest uppercase text-white">
               dev <span className="text-amber-400 border-b-2 border-amber-400/50">Hub</span>
             </span>
           </Link>

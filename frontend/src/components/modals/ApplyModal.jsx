@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import API from "../../api/axios";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { X, Send, Sparkles, ShieldCheck, Loader2 } from "lucide-react";
 
 export default function ApplyModal({ projectId, close, refresh }) {

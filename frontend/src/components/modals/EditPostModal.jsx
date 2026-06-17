@@ -48,7 +48,7 @@ export default function EditPostModal({ post, close, refresh }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 px-4 py-8">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg transform transition-all duration-300">
+      <div className="bg-slate-800/50 border border-slate-700/30 rounded-2xl shadow-2xl w-full max-w-lg transform transition-all duration-300 animate-in fade-in zoom-in">
         
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -64,13 +64,19 @@ export default function EditPostModal({ post, close, refresh }) {
         </div>
 
         {/* Content */}
-        <div className="p-6">
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 h-32 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200 resize-none"
-            placeholder="What's on your mind? Share your thoughts..."
-          />
+        
+          {/* Content */}
+          <div className="p-6">
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="What's on your mind?"
+              className="w-full h-32 bg-slate-800/50 text-white placeholder:text-slate-400 border border-slate-600 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors"
+            />
+
+            {/* File Upload Buttons */}
+
+          
 
           {/* File Upload Buttons */}
           <div className="flex gap-3 mt-4">
@@ -101,7 +107,7 @@ export default function EditPostModal({ post, close, refresh }) {
           {preview && (
             <div className="mt-4 relative">
               <div className="relative group">
-                {preview.includes("mp4") || (file && file.type.startsWith("video/")) ? (
+                {(preview && preview.includes("mp4")) || (file && file.type.startsWith("video/")) ? (
                   <video 
                     src={preview} 
                     controls 

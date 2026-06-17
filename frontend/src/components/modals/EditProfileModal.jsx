@@ -1,9 +1,14 @@
 import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setUser } from "../../redux/userSlice";
 import API from "../../api/axios";
 import { X, Camera, User, FileText, Wrench, Loader2 } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 export default function EditProfileModal({ user, close }) {
+  const dispatch = useDispatch();
+  const token = useSelector((s) => s.user.token);
+
   const [name, setName] = useState(user.name || "");
   const [bio, setBio] = useState(user.bio || "");
   const [skills, setSkills] = useState((user.skills || []).join(", "));
@@ -33,10 +38,11 @@ export default function EditProfileModal({ user, close }) {
       form.append("skills", skills);
       if (file) form.append("file", file);
 
-      await API.put("/user/update", form, {
+      const { data } = await API.put("/user/update", form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
+      dispatch(setUser({ user: data.user, token }));
       toast.success("Profile updated!");
       close();
     } catch (err) {
@@ -48,12 +54,12 @@ export default function EditProfileModal({ user, close }) {
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-[150] px-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="bg-slate-800/50 border border-slate-700/30 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
-          <h2 className="text-xl font-bold text-slate-800">Edit Profile</h2>
-          <button onClick={close} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700/50">
+          <h2 className="text-xl font-bold text-white">Edit Profile</h2>
+          <button onClick={close} className="p-2 hover:bg-slate-700/50 rounded-full text-slate-400 transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -84,8 +90,8 @@ export default function EditProfileModal({ user, close }) {
                 <input 
                   value={name} 
                   onChange={(e) => setName(e.target.value)} 
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
-                  placeholder="Your name"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-800/50 border border-slate-600 rounded-2xl focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-white outline-none transition-all text-sm font-medium" 
+                  placeholder="Your name" 
                 />
               </div>
             </div>
@@ -98,8 +104,8 @@ export default function EditProfileModal({ user, close }) {
                 <textarea 
                   value={bio} 
                   onChange={(e) => setBio(e.target.value)} 
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium h-24 resize-none"
-                  placeholder="Write a short bio..."
+                  className="w-full pl-11 pr-4 py-3 bg-slate-800/50 border border-slate-600 rounded-2xl focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-white outline-none transition-colors text-sm font-medium h-24 resize-none" 
+                  placeholder="Write a short bio..." 
                 />
               </div>
             </div>
@@ -112,7 +118,7 @@ export default function EditProfileModal({ user, close }) {
                 <input 
                   value={skills} 
                   onChange={(e) => setSkills(e.target.value)} 
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-800/50 border border-slate-600 rounded-2xl focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-white outline-none transition-colors text-sm font-medium"
                   placeholder="React, Tailwind, Node.js..."
                 />
               </div>

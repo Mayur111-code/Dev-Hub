@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import API from "../../api/axios";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { AiOutlineClose, AiOutlineCamera, AiOutlineProject } from "react-icons/ai";
 import { Users, Tag, Text, ArrowRight } from "lucide-react";
 

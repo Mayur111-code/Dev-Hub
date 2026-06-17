@@ -218,7 +218,12 @@ export const acceptRequest = async (req, res) => {
       projectId
     });
 
-    res.json({ message: "Request accepted", project });
+    const updated = await Project.findById(projectId)
+      .populate("owner", "name avatar")
+      .populate("team", "name avatar skills")
+      .populate("requests.user", "name avatar skills");
+
+    res.json({ message: "Request accepted", project: updated });
 
   } catch (err) {
     console.error("Accept error:", err);
@@ -246,7 +251,12 @@ export const rejectRequest = async (req, res) => {
     request.status = "rejected";
     await project.save();
 
-    res.json({ message: "Request rejected", project });
+    const updated = await Project.findById(projectId)
+      .populate("owner", "name avatar")
+      .populate("team", "name avatar skills")
+      .populate("requests.user", "name avatar skills");
+
+    res.json({ message: "Request rejected", project: updated });
 
   } catch (err) {
     console.error("Reject error:", err);
@@ -283,7 +293,12 @@ export const removeMember = async (req, res) => {
       projectId
     });
 
-    res.json({ message: "Member removed", project });
+    const updated = await Project.findById(projectId)
+      .populate("owner", "name avatar")
+      .populate("team", "name avatar skills")
+      .populate("requests.user", "name avatar skills");
+
+    res.json({ message: "Member removed", project: updated });
 
   } catch (err) {
     console.error("Remove member error:", err);

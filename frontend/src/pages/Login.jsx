@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { setUser } from "../redux/userSlice";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff, Mail, ArrowRight, Lock } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -121,7 +121,16 @@ export default function Login() {
           <div className="space-y-1">
             <div className="flex justify-between items-center px-1">
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Access Key</label>
-              <Link to="/forgot" className="text-[10px] font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-tighter">Recover?</Link>
+              <button 
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  toast.info("Password recovery is currently unavailable. Please contact support.");
+                }}
+                className="text-[10px] font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-tighter cursor-pointer bg-transparent border-none outline-none"
+              >
+                Recover?
+              </button>
             </div>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />

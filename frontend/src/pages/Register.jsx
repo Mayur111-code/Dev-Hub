@@ -4,7 +4,7 @@ import { setUser } from "../redux/userSlice";
 import { useDispatch } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff, Github, Twitter, Mail, User, Camera, ArrowRight } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 export default function Register() {
   const [name, setName] = useState("");

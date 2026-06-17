@@ -34,7 +34,7 @@ export default function LikesModal({ likes = [], close }) {
             </div>
           ) : (
             <div className="divide-y divide-slate-50">
-              {likes.map((u) => (
+              {likes.filter(Boolean).map((u) => (
                 <Link
                   key={u._id}
                   to={`/profile/${u._id}`}

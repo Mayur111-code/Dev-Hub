@@ -10,8 +10,8 @@ connectDB();
 const app = express();
 
 const allowedOrigins = [
-  "https://the-dev-hub.vercel.app"
-  //"http://localhost:5173"
+  //"https://the-dev-hub.vercel.app" ||
+   "http://localhost:5173",
 ];
 
 app.use(
@@ -28,7 +28,7 @@ app.use(
   })
 );
 
-// Preflight fix for file upload
+
 app.options("/api/upload/file", cors());
 
 app.use(express.json());

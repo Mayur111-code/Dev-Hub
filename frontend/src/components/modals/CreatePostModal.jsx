@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import API from "../../api/axios";
 import { X, Image as ImageIcon, Film, Loader2, Smile } from "lucide-react";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 export default function CreatePostModal({ close, refresh }) {
   const { user } = useSelector((state) => state.user);
@@ -42,8 +42,8 @@ export default function CreatePostModal({ close, refresh }) {
 
       await API.post("/posts/create", {
         content,
-        image: file.type.startsWith("image/") ? fileUrl : null,
-        video: file.type.startsWith("video/") ? fileUrl : null,
+        image: file && file.type.startsWith("image/") ? fileUrl : null,
+        video: file && file.type.startsWith("video/") ? fileUrl : null,
       });
 
       toast.success("Post shared successfully!");
